@@ -1,0 +1,19 @@
+{
+    "name": "SFramework.Pools.Runtime",
+    "rootNamespace": "SFramework.Pools.Runtime",
+    "references": [
+        "SFramework.Core.Runtime",
+        "Unity.Addressables",
+        "Unity.ResourceManager",
+        "Sirenix.OdinInspector.CompatibilityLayer"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,14 @@
+{
+  "author": "Secret Place Studio",
+  "name": "sp.sframework.pools",
+  "displayName": "SF Pools",
+  "version": "0.1.0",
+  "unity": "2019.4",
+  "description": "Pools Module",
+  "keywords": [
+    "scenes",
+    "sframework",
+    "di"
+  ],
+  "category": "SFramework"
+}
