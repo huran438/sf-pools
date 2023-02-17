@@ -1,19 +1,15 @@
 ﻿using System;
 using SFramework.Core.Runtime;
+using SFramework.Repositories.Runtime;
 using UnityEngine;
 
 namespace SFramework.Pools.Runtime
 {
     [Serializable]
-    public class SFPrefabsGroupContainer : ISFDatabaseNode
+    public class SFPrefabsGroupContainer : SFNode
     {
-        public string Name => _name;
-        public ISFDatabaseNode[] Children => _prefabContainers;
+        public override ISFNode[] Nodes => Prefabs;
         
-        [SerializeField]
-        private string _name;
-        
-        [SerializeField]
-        private SFPrefabContainer[] _prefabContainers = Array.Empty<SFPrefabContainer>();
+        public SFPrefabNode[] Prefabs = Array.Empty<SFPrefabNode>();
     }
 }

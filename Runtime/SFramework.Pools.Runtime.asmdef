@@ -5,7 +5,7 @@
         "SFramework.Core.Runtime",
         "Unity.Addressables",
         "Unity.ResourceManager",
-        "Sirenix.OdinInspector.CompatibilityLayer"
+        "SFramework.Repositories.Runtime"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
