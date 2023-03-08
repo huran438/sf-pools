@@ -18,10 +18,10 @@ namespace SFramework.Pools.Runtime
 
             foreach (var layer0 in Groups)
             {
-                pools.Add($"{_Name}/{layer0._Name}");
+                pools.Add($"{Name}/{layer0.Name}");
                 foreach (var layer1 in layer0.Prefabs)
                 {
-                    prefabs.Add($"{_Name}/{layer0._Name}/{layer1._Name}");
+                    prefabs.Add($"{Name}/{layer0.Name}/{layer1.Name}");
                 }
             }
 

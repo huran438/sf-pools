@@ -31,7 +31,7 @@ namespace SFramework.Pools.Runtime
                     var loadAssetAsync = Addressables.LoadAssetAsync<GameObject>(prefabContainer.Path);
                     await loadAssetAsync.Task;
                     var gameObject = loadAssetAsync.Result;
-                    var sfPrefab = $"{prefabsGroupContainer._Name}/{prefabContainer._Name}";
+                    var sfPrefab = $"{prefabsGroupContainer.Name}/{prefabContainer.Name}";
                     _prefabObjectBySFPrefab[sfPrefab] = gameObject;
                     ObjectPool<GameObject> objectPool = null;
                     objectPool = new ObjectPool<GameObject>(() =>
