@@ -54,6 +54,7 @@ namespace SFramework.Pools.Runtime
             }
         }
 
+        public bool LoadingCompleted { get; private set; }
         public float LoadingProgress => 0f;
 
         public bool CanSpawnPrefab(string prefab)

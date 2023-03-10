@@ -5,6 +5,7 @@ namespace SFramework.Pools.Runtime
 {
     public interface ISFPoolsService : ISFService
     {
+        bool LoadingCompleted { get; }
         float LoadingProgress { get; }
         bool CanSpawnPrefab(string prefab);
         bool Spawn(string prefab, out GameObject gameObject, Vector3 position, Quaternion rotation);
