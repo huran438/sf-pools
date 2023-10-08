@@ -6,7 +6,7 @@ using UnityEngine;
 namespace SFramework.Pools.Runtime
 {
     [Serializable]
-    public class SFPrefabsGroupContainer : SFNode
+    public class SFPrefabsGroupNode : SFNode
     {
         public override ISFNode[] Nodes => Prefabs;
         

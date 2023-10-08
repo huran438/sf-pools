@@ -9,7 +9,7 @@ namespace SFramework.Pools.Runtime
     public class SFPoolsRepository : SFRepository, ISFRepositoryGenerator
     {
         public override ISFNode[] Nodes => Groups;
-        public SFPrefabsGroupContainer[] Groups = Array.Empty<SFPrefabsGroupContainer>();
+        public SFPrefabsGroupNode[] Groups = Array.Empty<SFPrefabsGroupNode>();
 
         public void GetGenerationData(out SFGenerationData[] generationData)
         {

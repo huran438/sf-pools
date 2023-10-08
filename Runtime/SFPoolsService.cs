@@ -1,55 +1,39 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using SFramework.Core.Runtime;
 using SFramework.Repositories.Runtime;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Pool;
 using Object = UnityEngine.Object;
+using SFExtensions = SFramework.Repositories.Runtime.SFExtensions;
 
 namespace SFramework.Pools.Runtime
 {
     public class SFPoolsService : ISFPoolsService
     {
-        [SFInject]
-        private readonly ISFContainer _container;
-        
+        [SFInject] private readonly ISFContainer _container;
+
         private readonly Dictionary<string, GameObject> _prefabObjectBySFPrefab = new();
         private readonly Dictionary<string, IObjectPool<GameObject>> _poolBySFPrefab = new();
         private readonly Dictionary<GameObject, string> _sfPrefabByInstance = new();
+        private readonly Dictionary<string, SFPrefabNode> _prefabNodeByName = new();
 
-
-        [SFInject]
-        public async void Init(ISFRepositoryProvider provider)
+        SFPoolsService(ISFRepositoryProvider provider)
         {
-            var _repository = provider.GetRepositories<SFPoolsRepository>().FirstOrDefault();
-
-            foreach (SFPrefabsGroupContainer prefabsGroupContainer in _repository.Nodes)
+            foreach (var repository in provider.GetRepositories<SFPoolsRepository>())
             {
-                foreach (SFPrefabNode prefabContainer in prefabsGroupContainer.Nodes)
+                foreach (SFPrefabsGroupNode prefabsGroupContainer in repository.Nodes)
                 {
-                    var loadAssetAsync = Addressables.LoadAssetAsync<GameObject>(prefabContainer.Path);
-                    await loadAssetAsync.Task;
-                    var gameObject = loadAssetAsync.Result;
-                    var sfPrefab = $"{prefabsGroupContainer.Name}/{prefabContainer.Name}";
-                    _prefabObjectBySFPrefab[sfPrefab] = gameObject;
-                    ObjectPool<GameObject> objectPool = null;
-                    objectPool = new ObjectPool<GameObject>(() =>
-                        {
-                            var _gameObject = Object.Instantiate(_prefabObjectBySFPrefab[sfPrefab]);
-                            _container.Inject(_gameObject);
-                            _sfPrefabByInstance[_gameObject] = sfPrefab;
-                            return _gameObject;
-                        },
-                        go => { go.SetActive(true); },
-                        go => { go.SetActive(false); },
-                        go =>
-                        {
-                            Object.Destroy(go);
-                            _sfPrefabByInstance.Remove(go);
-                        });
-
-                    _poolBySFPrefab[sfPrefab] = objectPool;
+                    foreach (SFPrefabNode prefabContainer in prefabsGroupContainer.Nodes)
+                    {
+                        var id = SFExtensions.GetSFId(repository.Name, prefabsGroupContainer.Name,
+                            prefabContainer.Name);
+                        _prefabNodeByName[id] = prefabContainer;
+                    }
                 }
             }
         }
@@ -60,6 +44,39 @@ namespace SFramework.Pools.Runtime
         public bool CanSpawnPrefab(string prefab)
         {
             return _prefabObjectBySFPrefab.ContainsKey(prefab);
+        }
+
+        public async UniTask Load(string prefab, IProgress<float> progress = null,
+            CancellationToken cancellationToken = default)
+        {
+            var prefabNode = _prefabNodeByName[prefab];
+            var loadAssetAsync = Addressables.LoadAssetAsync<GameObject>(prefabNode.Path);
+            await loadAssetAsync.Task;
+            var gameObject = loadAssetAsync.Result;
+            _prefabObjectBySFPrefab[prefab] = gameObject;
+
+            var objectPool = new ObjectPool<GameObject>(() =>
+                {
+                    var _gameObject = Object.Instantiate(_prefabObjectBySFPrefab[prefab]);
+                    _container.Inject(_gameObject);
+                    _sfPrefabByInstance[_gameObject] = prefab;
+                    return _gameObject;
+                },
+                go => { go.SetActive(true); },
+                go => { go.SetActive(false); },
+                go =>
+                {
+                    Object.Destroy(go);
+                    _sfPrefabByInstance.Remove(go);
+                });
+
+            _poolBySFPrefab[prefab] = objectPool;
+            Addressables.Release(loadAssetAsync);
+        }
+
+        public void Unload(string prefab)
+        {
+            throw new NotImplementedException();
         }
 
         public bool Spawn(string prefab, out GameObject gameObject, Vector3 position, Quaternion rotation)
