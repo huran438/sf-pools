@@ -1,45 +1,38 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using SFramework.Configs.Runtime;
 using SFramework.Core.Runtime;
-using SFramework.Repositories.Runtime;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Pool;
 using Object = UnityEngine.Object;
-using SFExtensions = SFramework.Repositories.Runtime.SFExtensions;
 
 namespace SFramework.Pools.Runtime
 {
     public class SFPoolsService : ISFPoolsService
     {
-        [SFInject] private readonly ISFContainer _container;
-
         private readonly Dictionary<string, GameObject> _prefabObjectBySFPrefab = new();
         private readonly Dictionary<string, IObjectPool<GameObject>> _poolBySFPrefab = new();
         private readonly Dictionary<GameObject, string> _sfPrefabByInstance = new();
         private readonly Dictionary<string, SFPrefabNode> _prefabNodeByName = new();
 
-        SFPoolsService(ISFRepositoryProvider provider)
+        SFPoolsService(ISFConfigsService provider)
         {
-            foreach (var repository in provider.GetRepositories<SFPoolsRepository>())
+            foreach (var repository in provider.GetRepositories<SFPoolsConfig>())
             {
                 foreach (SFPrefabsGroupNode prefabsGroupContainer in repository.Nodes)
                 {
                     foreach (SFPrefabNode prefabContainer in prefabsGroupContainer.Nodes)
                     {
-                        var id = SFExtensions.GetSFId(repository.Name, prefabsGroupContainer.Name,
+                        var id = SFConfigsExtensions.GetSFId(repository.Name, prefabsGroupContainer.Name,
                             prefabContainer.Name);
                         _prefabNodeByName[id] = prefabContainer;
                     }
                 }
             }
         }
-
-        public bool LoadingCompleted { get; private set; }
-        public float LoadingProgress => 0f;
 
         public bool CanSpawnPrefab(string prefab)
         {
@@ -58,7 +51,7 @@ namespace SFramework.Pools.Runtime
             var objectPool = new ObjectPool<GameObject>(() =>
                 {
                     var _gameObject = Object.Instantiate(_prefabObjectBySFPrefab[prefab]);
-                    _container.Inject(_gameObject);
+                    _gameObject.Inject();
                     _sfPrefabByInstance[_gameObject] = prefab;
                     return _gameObject;
                 },

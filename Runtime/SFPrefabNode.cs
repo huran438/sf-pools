@@ -1,16 +1,16 @@
 ﻿using System;
+using SFramework.Configs.Runtime;
 using SFramework.Core.Runtime;
-using SFramework.Repositories.Runtime;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 
 namespace SFramework.Pools.Runtime
 {
     [Serializable]
-    public class SFPrefabNode : SFNode
+    public class SFPrefabNode : SFConfigNode
     {
         public string Path;
         public int PreloadAmount;
-        public override ISFNode[] Nodes => null;
+        public override ISFConfigNode[] Nodes => null;
     }
 }

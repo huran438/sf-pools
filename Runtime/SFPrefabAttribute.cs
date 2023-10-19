@@ -1,11 +1,11 @@
-﻿using SFramework.Core.Runtime;
-using SFramework.Repositories.Runtime;
+﻿using SFramework.Configs.Runtime;
+using SFramework.Core.Runtime;
 
 namespace SFramework.Pools.Runtime
 {
     public class SFPrefabAttribute : SFIdAttribute
     {
-        public SFPrefabAttribute() : base(typeof(SFPoolsRepository) ,-1)
+        public SFPrefabAttribute() : base(typeof(SFPoolsConfig) ,-1)
         {
         }
     }

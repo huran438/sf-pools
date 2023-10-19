@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
+using SFramework.Configs.Runtime;
 using SFramework.Core.Runtime;
-using SFramework.Repositories.Runtime;
 using UnityEngine;
 
 namespace SFramework.Pools.Runtime
 {
-    public class SFPoolsRepository : SFRepository, ISFRepositoryGenerator
+    public class SFPoolsConfig : SFConfig, ISFConfigsGenerator
     {
-        public override ISFNode[] Nodes => Groups;
+        public override ISFConfigNode[] Nodes => Groups;
         public SFPrefabsGroupNode[] Groups = Array.Empty<SFPrefabsGroupNode>();
 
         public void GetGenerationData(out SFGenerationData[] generationData)
