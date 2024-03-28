@@ -8,7 +8,7 @@ namespace SFramework.Pools.Runtime
 {
     public class SFPoolsConfig : SFConfig, ISFConfigsGenerator
     {
-        public override ISFConfigNode[] Nodes => Groups;
+        public override ISFConfigNode[] Children => Groups;
         public SFPrefabsGroupNode[] Groups = Array.Empty<SFPrefabsGroupNode>();
 
         public void GetGenerationData(out SFGenerationData[] generationData)
@@ -18,10 +18,10 @@ namespace SFramework.Pools.Runtime
 
             foreach (var layer0 in Groups)
             {
-                pools.Add($"{Name}/{layer0.Name}");
+                pools.Add($"{Id}/{layer0.Id}");
                 foreach (var layer1 in layer0.Prefabs)
                 {
-                    prefabs.Add($"{Name}/{layer0.Name}/{layer1.Name}");
+                    prefabs.Add($"{Id}/{layer0.Id}/{layer1.Id}");
                 }
             }
 

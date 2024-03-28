@@ -22,12 +22,12 @@ namespace SFramework.Pools.Runtime
         {
             foreach (var repository in provider.GetRepositories<SFPoolsConfig>())
             {
-                foreach (SFPrefabsGroupNode prefabsGroupContainer in repository.Nodes)
+                foreach (SFPrefabsGroupNode prefabsGroupContainer in repository.Children)
                 {
-                    foreach (SFPrefabNode prefabContainer in prefabsGroupContainer.Nodes)
+                    foreach (SFPrefabNode prefabContainer in prefabsGroupContainer.Children)
                     {
-                        var id = SFConfigsExtensions.GetSFId(repository.Name, prefabsGroupContainer.Name,
-                            prefabContainer.Name);
+                        var id = SFConfigsExtensions.GetSFId(repository.Id, prefabsGroupContainer.Id,
+                            prefabContainer.Id);
                         _prefabNodeByName[id] = prefabContainer;
                     }
                 }

@@ -11,6 +11,6 @@ namespace SFramework.Pools.Runtime
     {
         public string Path;
         public int PreloadAmount;
-        public override ISFConfigNode[] Nodes => null;
+        public override ISFConfigNode[] Children => null;
     }
 }

@@ -8,7 +8,7 @@ namespace SFramework.Pools.Runtime
     [Serializable]
     public class SFPrefabsGroupNode : SFConfigNode
     {
-        public override ISFConfigNode[] Nodes => Prefabs;
+        public override ISFConfigNode[] Children => Prefabs;
         
         public SFPrefabNode[] Prefabs = Array.Empty<SFPrefabNode>();
     }
