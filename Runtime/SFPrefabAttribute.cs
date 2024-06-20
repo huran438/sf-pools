@@ -1,5 +1,4 @@
 ﻿using SFramework.Configs.Runtime;
-using SFramework.Core.Runtime;
 
 namespace SFramework.Pools.Runtime
 {

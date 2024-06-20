@@ -18,20 +18,27 @@ namespace SFramework.Pools.Runtime
         private readonly Dictionary<GameObject, string> _sfPrefabByInstance = new();
         private readonly Dictionary<string, SFPrefabNode> _prefabNodeByName = new();
 
+        private readonly ISFConfigsService _configsService;
+
         SFPoolsService(ISFConfigsService provider)
         {
-            foreach (var repository in provider.GetRepositories<SFPoolsConfig>())
+            _configsService = provider;
+        }
+        
+        public UniTask Init(CancellationToken cancellationToken)
+        {
+            foreach (var repository in _configsService.GetConfigs<SFPoolsConfig>())
             {
                 foreach (SFPrefabsGroupNode prefabsGroupContainer in repository.Children)
                 {
                     foreach (SFPrefabNode prefabContainer in prefabsGroupContainer.Children)
                     {
-                        var id = SFConfigsExtensions.GetSFId(repository.Id, prefabsGroupContainer.Id,
-                            prefabContainer.Id);
-                        _prefabNodeByName[id] = prefabContainer;
+                        _prefabNodeByName[prefabContainer.FullId] = prefabContainer;
                     }
                 }
             }
+            
+            return UniTask.CompletedTask;
         }
 
         public bool CanSpawnPrefab(string prefab)
@@ -123,5 +130,6 @@ namespace SFramework.Pools.Runtime
         public void Dispose()
         {
         }
+   
     }
 }
