@@ -2,8 +2,6 @@
 
 # SF Pools
 
-[Documentation website](https://docs.secretplace.studio/#sf-pools)
-
 ![Package](https://img.shields.io/badge/package-sp.sframework.pools-555555) ![Version](https://img.shields.io/badge/version-0.1.0-555555)
 
 SF Pools loads config-defined Addressable prefabs and reuses their instances through Unity's `ObjectPool<GameObject>`. Spawned instances receive a position and rotation; despawning deactivates them for reuse.
