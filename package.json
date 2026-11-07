@@ -3,12 +3,18 @@
   "name": "sp.sframework.pools",
   "displayName": "SF Pools",
   "version": "0.1.0",
-  "unity": "2019.4",
+  "unity": "6000.0",
   "description": "Pools Module",
   "keywords": [
     "scenes",
     "sframework",
     "di"
   ],
-  "category": "SFramework"
+  "category": "SFramework",
+  "dependencies": {
+    "sp.sframework.core": "0.2.0",
+    "sp.sframework.configs": "1.0.0",
+    "com.cysharp.unitask": "2.5.11",
+    "com.unity.addressables": "2.9.1"
+  }
 }

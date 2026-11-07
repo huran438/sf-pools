@@ -2,23 +2,17 @@
 
 # SF Pools
 
-![Package](https://img.shields.io/badge/package-sp.sframework.pools-555555) ![Version](https://img.shields.io/badge/version-0.1.0-555555)
+![Package](https://img.shields.io/badge/UPM-sp.sframework.pools-5865f2) ![Version](https://img.shields.io/badge/version-0.1.0-5865f2)
+
+## Overview
 
 SF Pools loads config-defined Addressable prefabs and reuses their instances through Unity's `ObjectPool<GameObject>`. Spawned instances receive a position and rotation; despawning deactivates them for reuse.
 
-Use it for repeated objects such as projectiles, effects, or scene props when your application can manage loading, reset behavior, and cleanup.
+Use it for repeated objects such as projectiles, effects, or scene props. The service owns the loaded prefab and its clones; your application controls when to load them and how to reset gameplay state.
 
-[Install](#install) · [Configure](#configure) · [Use](#use) · [API](#api) · [Limitations](#limitations)
+## Requirements
 
-## Install
-
-In Unity Package Manager, select **Add package from git URL** and enter:
-
-```text
-https://github.com/huran438/sf-pools.git#main
-```
-
-The [manifest](package.json) does not declare dependencies. Install these separately:
+See the [manifest](package.json) for declared dependencies. The host project must provide these assemblies:
 
 | Requirement | Reason |
 | --- | --- |
@@ -30,9 +24,21 @@ The [manifest](package.json) does not declare dependencies. Install these separa
 | Newtonsoft.Json | SF Configs references `Newtonsoft.Json.dll`. |
 | Unity editor with `UnityEngine.Pool` | The implementation uses `ObjectPool<GameObject>` and `IObjectPool<GameObject>`. |
 
-Your code assembly must reference `SFramework.Pools.Runtime` and the SF assemblies it uses. `package.json` lists Unity `2019.4`; that metadata does not establish compatibility with the pool API, newer C# syntax, or SF Core's `destroyCancellationToken` usage. No supported editor floor was verified here.
+Your code assembly must reference `SFramework.Pools.Runtime` and the SF assemblies it uses. Use Unity 6000.0 or later.
 
-## Configure
+This package has no package-specific scripting define requirement.
+
+## Installation
+
+In Unity Package Manager, select **Add package from git URL** and enter:
+
+```text
+https://github.com/huran438/sf-pools.git#main
+```
+
+## Quick start
+
+### Configuration
 
 Save this as a JSON TextAsset under a `Resources` folder, for example `Assets/Resources/SFramework/Pools.json`:
 
@@ -65,9 +71,9 @@ The config tree produces `pools/combat/projectile`. Use the complete `config/gro
 
 Register configs before pools. SF Core constructs services during `Bind`, then awaits service initialization in registration order.
 
-## Use
+### Usage
 
-Save this class as `PoolsContext.cs` and add it to your startup scene. For this example, the default SF Configs service must load only `SFPoolsConfig` JSON; see the mixed-config limitation below.
+Save this class as `PoolsContext.cs` and add it to your startup scene. Pools indexes only `SFPoolsConfig` entries, so other config types can share the same Configs service.
 
 ```csharp
 using System.Threading;
@@ -79,6 +85,7 @@ using UnityEngine;
 
 public sealed class PoolsContext : SFContextRoot
 {
+    private const string ProjectileId = "pools/combat/projectile";
     private ISFPoolsService _pools;
     private GameObject _projectile;
 
@@ -92,9 +99,8 @@ public sealed class PoolsContext : SFContextRoot
 
     protected override async UniTask Init(CancellationToken cancellationToken)
     {
-        const string id = "pools/combat/projectile";
-        await _pools.Load(id);
-        if (_pools.Spawn(id, out _projectile, Vector3.zero, Quaternion.identity))
+        await _pools.Load(ProjectileId, cancellationToken: cancellationToken);
+        if (_pools.Spawn(ProjectileId, out _projectile, Vector3.zero, Quaternion.identity))
             Debug.Log("Projectile spawned.");
     }
 
@@ -103,12 +109,14 @@ public sealed class PoolsContext : SFContextRoot
         if (_projectile != null && _pools.Despawn(_projectile))
             _projectile = null;
     }
+
+    private void OnDestroy() => _pools?.Unload(ProjectileId);
 }
 ```
 
 `Init` indexes config nodes; it does not load prefabs. Await `Load` once before spawning from a pool. On reuse, reset gameplay state such as velocity, timers, health, and event subscriptions in your own component lifecycle.
 
-The pool creates instances with `Object.Instantiate`, activates them on `Get`, and deactivates them on `Release`. `Spawn` assigns position and rotation after `Get`, so `OnEnable` can run before the new transform values reach the object.
+The pool creates instances with `Object.Instantiate`. A prefab saved active can run its first `OnEnable` during instantiation. On reuse, `Spawn` assigns the requested transform before activating the returned object.
 
 ## API
 
@@ -116,34 +124,40 @@ The [interface](Runtime/ISFPoolsService.cs) extends `ISFService`, including `Uni
 
 | Signature | Behavior |
 | --- | --- |
-| `bool CanSpawnPrefab(string prefab)` | Checks whether the prefab asset has loaded; does not enforce pool capacity. |
-| `UniTask Load(string prefab, IProgress<float> progress = null, CancellationToken cancellationToken = default)` | Loads the configured asset and creates its pool. Current code ignores progress and cancellation. |
-| `void Unload(string prefab)` | Throws `NotImplementedException`. |
+| `bool CanSpawnPrefab(string prefab)` | Checks whether the pool is ready for spawns. |
+| `UniTask Load(string prefab, IProgress<float> progress = null, CancellationToken cancellationToken = default)` | Loads the configured asset or waits for the existing load. An optional progress callback receives Addressables progress and `1` on success. |
+| `void Unload(string prefab)` | Cancels pending waiters, destroys all clones from the pool, and releases its prefab handle. No effect if the ID has no pool or pending load. |
 | `bool Spawn(string prefab, out GameObject gameObject, Vector3 position, Quaternion rotation)` | Returns `false` and `null` when the pool does not exist. |
-| `bool Spawn<T>(string prefab, out T component, Vector3 position, Quaternion rotation) where T : Component` | Spawns, then calls `GetComponent<T>()`. Success does not guarantee a non-null component. |
-| `bool Despawn(GameObject gameObject)` | Returns an active tracked instance to its pool; returns `false` for inactive or untracked objects. |
-| `void DespawnAll()` | Attempts to release tracked instances. |
+| `bool Spawn<T>(string prefab, out T component, Vector3 position, Quaternion rotation) where T : Component` | Returns a component on the prefab root. If absent, returns the clone to its pool and reports `false` with a null output. |
+| `bool Despawn(GameObject gameObject)` | Returns a checked-out instance to its pool, even if the caller disabled it. Untracked and already returned objects are ignored. |
+| `void DespawnAll()` | Returns all checked-out instances. |
+| `void Dispose()` | Unloads every pool and prevents new loads. |
 
 Pass a live, non-null GameObject to `Despawn`. Use the generic spawn overload when the prefab root carries the requested component, and check the returned component before using it.
 
-## Limitations
+## Behavior and limitations
 
-- `SFPoolsService.Init` calls the obsolete `ISFConfigsService.GetConfigs<SFPoolsConfig>()`. In the current SF Configs implementation, that method casts the entire config collection instead of filtering it. Loading JSON for other config types can throw `InvalidCastException`. Supply a type-filtering `ISFConfigsService` implementation or address that integration issue before combining config modules.
-- Unknown IDs in `Load` throw through dictionary lookup. Repeated `Load` calls replace the pool without disposing the previous one; the service does not coordinate concurrent loads.
-- `Load` releases its Addressables asset handle after creating the pool, while retaining the prefab reference for future instantiation. The service does not maintain an Addressables lifetime reference for the pool. Validate asset and dependency lifetimes before relying on this behavior.
-- `Unload` has no implementation. `Dispose` does not clear pools, destroy active instances, or release retained resources. The service exposes no capacity, prewarm, reset, parent, or pool statistics controls.
-- New instances call the core `Inject(this object)` extension on the GameObject. That extension uses object injection and does not traverse child components. `SFView` components inject themselves in `Awake`; plain `ISFInjectable` components need an explicit integration path such as `SFContainer.Inject(gameObject, includeInactive: true)`.
-- `DespawnAll` iterates the tracking dictionary. Pool destruction removes entries from that dictionary; a release that triggers destruction can invalidate the enumeration.
+- Use the service on Unity's main thread. Unknown IDs in `Load` throw; a failed Addressables load leaves no pool and can be retried.
+- Callers share the same operation. A caller's cancellation token cancels only that caller's wait. Even if every caller cancels, the service can finish the load and keeps the pool until `Unload` or `Dispose`.
+- The pool retains its own Addressables handle. In Play Mode, the handle is released after Unity has processed deferred clone destruction. The service exposes no capacity, prewarm, reset, parent, or pool statistics controls.
+- New instances inject plain `ISFInjectable` components throughout the hierarchy, including inactive children. `SFView` components are skipped by this traversal because they inject themselves in `Awake`. Reusing a pooled object does not repeat injection; service changes require explicit reinjection.
+- Clones belong to the scene where Unity instantiates them. If the service outlives that scene, it skips scene-destroyed instances when reusing or unloading the pool.
 
-For `Spawn` returning `false`, check the full ID and await `Load` first. For a `true` generic spawn with a null component, verify that the requested component sits on the prefab root. An object you deactivate yourself cannot pass the current `Despawn` active-state check.
+## Tests
 
-## Source and related modules
+Package tests are in [Tests/Editor](Tests/Editor) and use the `SFramework.Pools.Editor.Tests` assembly. Install Unity Test Framework (`com.unity.test-framework`) in the host project. Test assemblies are Editor-only and gated by `UNITY_INCLUDE_TESTS`.
 
-[Service](Runtime/SFPoolsService.cs) · [Config](Runtime/SFPoolsConfig.cs) · [Prefab node](Runtime/SFPrefabNode.cs) · [Assembly](Runtime/SFramework.Pools.Runtime.asmdef)
+Add `sp.sframework.pools` to the top-level `testables` array in the host project's `Packages/manifest.json`, preserving its dependencies and any existing testable entries:
 
-[SF Core](https://github.com/huran438/sf-core) provides service registration; [SF Configs](https://github.com/huran438/sf-configs) provides IDs and JSON loading; [SF Scenes](https://github.com/huran438/sf-scenes) loads additive scenes.
+```json
+{
+  "testables": ["sp.sframework.pools"]
+}
+```
 
-Documentation reflects source snapshot `d5145f094d4002c5630c6ed4d853d4b315936cf4`. API and dependency checks were static; no Unity compile, play-mode run, pooling benchmark, or Addressables build was performed.
+Open **Window > General > Test Runner**, select **EditMode**, and run `SFramework.Pools.Editor.Tests`. The `sf-demo` host enables all SFramework package tests in its manifest.
+
+The EditMode suite uses controlled Addressables operations to cover load sharing, cancellation, failure and retry, and clone and handle teardown without downloading content. Validate catalogs, gameplay resets, and player builds in the consuming project.
 
 ## License
 

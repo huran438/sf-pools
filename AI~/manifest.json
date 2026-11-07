@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "instructions": "AI~/instructions.md",
+  "skills": [
+    {
+      "path": "AI~/skills/sf-pools",
+      "references": {
+        "references/package-readme.md": "README.md"
+      }
+    }
+  ]
+}

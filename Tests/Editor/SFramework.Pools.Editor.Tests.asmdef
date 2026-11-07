@@ -1,0 +1,10 @@
+{
+    "name": "SFramework.Pools.Editor.Tests",
+    "rootNamespace": "SFramework.Pools.Editor.Tests",
+    "references": ["SFramework.Pools.Runtime", "SFramework.Configs.Runtime", "SFramework.Core.Runtime", "Unity.ResourceManager", "UniTask"],
+    "includePlatforms": ["Editor"],
+    "autoReferenced": false,
+    "defineConstraints": ["UNITY_INCLUDE_TESTS"],
+    "optionalUnityReferences": ["TestAssemblies"]
+}
+
